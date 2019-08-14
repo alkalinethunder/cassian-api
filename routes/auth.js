@@ -108,7 +108,7 @@ router.get('/userinfo', passport.authenticate('jwt', { session: false }), functi
     res.json({
         success: true,
         errors: [],
-        user: req.user.toJSON()
+        user: req.user.toJSON(false) // don't strip the email for our own user.
     });
 });
 
