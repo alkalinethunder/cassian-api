@@ -195,6 +195,11 @@ router.post('/:username/:project/edit', passport.authenticate('jwt', { session: 
                                     project.name = payload.name;
                                     project.slug = slugify(payload.name);
                                     project.about = payload.description;
+                                    if(payload.summary)
+                                        project.summary = payload.summary;
+                                    if(payload.tags)
+                                        project.tags = payload.tags;
+
                                     project.save(function(err, saved) {
                                         response.success = true;
                                         response.project = saved;
@@ -205,6 +210,11 @@ router.post('/:username/:project/edit', passport.authenticate('jwt', { session: 
                         } else {
                             // Update only the description.
                             project.about = payload.description;
+                            if(payload.summary)
+                                project.summary = payload.summary;
+                            if(payload.tags)
+                                project.tags = payload.tags;
+                                        
                             project.save(function(err, saved) {
                                 response.success = true;
                                 response.project = saved;

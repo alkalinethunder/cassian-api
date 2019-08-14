@@ -10,7 +10,8 @@ const projectsSchema = new Schema({
     admins: [{type: Schema.Types.ObjectId, ref: 'users'}],
     devs: [{type: Schema.Types.ObjectId, ref: 'users'}],
     tags: [{type: String}],
-    public: { type: Boolean, default: true, required: true }
+    public: { type: Boolean, default: true, required: true },
+    summary: { type: String, default: '' }
 });
 
 projectsSchema.methods.isOwner = function(user) {
