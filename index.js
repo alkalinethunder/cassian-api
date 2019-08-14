@@ -21,6 +21,7 @@ app.use(passport.initialize());
 // Projects router
 app.use('/projects', require('./routes/projects'));
 app.use('/auth', require('./routes/auth'));
+app.use('/users', require('./routes/users'));
 
 // What port will we run on?
 const port = process.env.PORT || 3000;

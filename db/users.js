@@ -7,14 +7,14 @@ const UsersSchema = new Schema({
     email: { type: String, required: true, unique: true },
     hash: { type: String, required: true },
     salt: {type: String, required: true },
-    fullName: String,
+    fullName: { type: String, default: '' },
     username: { type: String, unique: true, required: true },
-    about: String,
-    websiteURL: String,
-    githubURL: String,
-    avatarURL: String,
-    coverURL: String,
-    preferFullName: Boolean
+    about: { type: String, default: '' },
+    websiteURL: { type: String, default: '' },
+    githubURL: { type: String, default: '' },
+    avatarURL: { type: String, default: '' },
+    coverURL: { type: String, default: '' },
+    preferFullName: { type: Boolean, default: false }
 });
 
 UsersSchema.methods.toJSON = function(stripEmail = true) {

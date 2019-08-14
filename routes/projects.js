@@ -12,6 +12,11 @@ const util = require('./util');
 var router = express.Router();
 
 router.get('/', util.optionalAuthenticate, function(req, res) {
+    let start = req.query.start || 0;
+    let max = req.query.max || -1;
+    if(start < 0) start = 0;
+    if(max <= 0) max = -1;
+    
     let response = {
         success: false,
         errors: [],
@@ -24,7 +29,8 @@ router.get('/', util.optionalAuthenticate, function(req, res) {
             res.json(response);
         } else {
             if(projects) {
-                for(let project of projects) {
+                for(let i = start; i < projects.length && (max == -1 || i < start + max); i++) {
+                    let project = projects[i];
                     response.projects.push(project.toJSON());
                 }
 
