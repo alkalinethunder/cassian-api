@@ -105,7 +105,11 @@ router.post('/login', function(req, res) {
 });
 
 router.get('/userinfo', passport.authenticate('jwt', { session: false }), function(req, res) {
-    res.json(req.user);
+    res.json({
+        success: true,
+        errors: [],
+        user: req.user.toJSON()
+    });
 });
 
 module.exports = router;

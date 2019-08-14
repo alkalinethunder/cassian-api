@@ -35,12 +35,12 @@ module.exports.findAccessibleProject = function(user, id, cb) {
                     ],
                 },
             ],
-        }).exec(cb);
+        }).populate('owner').exec(cb);
     } else {
         Project.findOne({
             _id: id,
             public: true
-        }).exec(cb);
+        }).populate('owner').exec(cb);
     }
 }
 
@@ -63,11 +63,11 @@ module.exports.findAccessibleProjects = function(user, cb) {
                 { devs: user },
                 { public: true },
             ],
-        }).exec(cb);
+        }).populate('owner').exec(cb);
     } else {
         Project.find({
             public: true
-        }).exec(cb);
+        }).populate('owner').exec(cb);
     }
 }
 
@@ -139,12 +139,12 @@ module.exports.findOwnedProjects = function(user, owner, cb) {
                                 ],
                             },
                         ],
-                    }).exec(cb);
+                    }).populate('owner').exec(cb);
                 } else {
                     Project.find({
                         public: true,
                         owner: u
-                    }).exec(cb);
+                    }).populate('owner').exec(cb);
                 }
             } else {
                 cb(null, false);

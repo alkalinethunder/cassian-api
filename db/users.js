@@ -17,6 +17,21 @@ const UsersSchema = new Schema({
     preferFullName: Boolean
 });
 
+UsersSchema.methods.toJSON = function(stripEmail = true) {
+    var obj = this.toObject();
+
+    // Strip the password hash and salt.
+    delete obj.hash;
+    delete obj.salt;
+
+    // Strip the email.  Not everyone needs to know a user's email.
+    if(stripEmail) {
+        delete obj.email;
+    }
+
+    return obj;
+}
+
 UsersSchema.methods.setPassword = function(password) {
     // Generate a new salt.
     this.salt = crypto.randomBytes(16).toString('hex');
