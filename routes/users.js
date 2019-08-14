@@ -25,4 +25,46 @@ router.get('/', function(req, res) {
     });
 });
 
+router.get('/id/:id', function(req, res) {
+    let id = req.params.id;
+
+    let response = {
+        errors: [],
+        success: false,
+        user: null
+    };
+
+    User.findOne({ _id: id }).exec(function(err, user) {
+        if(user) {
+            response.success = true;
+            response.user = user.toJSON();
+            res.json(response);
+        } else {
+            response.errors.push('A user with that ID does not exist.');
+            res.status(404).json(response);
+        }
+    });
+});
+
+router.get('/username/:username', function(req, res) {
+    let username = req.params.username;
+
+    let response = {
+        errors: [],
+        success: false,
+        user: null
+    };
+
+    User.findOne({ username }).exec(function(err, user) {
+        if(user) {
+            response.success = true;
+            response.user = user.toJSON();
+            res.json(response);
+        } else {
+            response.errors.push('A user with that username does not exist.');
+            res.status(404).json(response);
+        }
+    });
+})
+
 module.exports = router;
