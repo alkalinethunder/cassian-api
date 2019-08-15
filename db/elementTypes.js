@@ -8,4 +8,10 @@ const ElementTypesSchema = new Schema({
     icon: { type: String, required: true, default: 'fa fa-folder' }
 });
 
+ElementTypesSchema.methods.toJSON = function() {
+    var obj = this.toObject();
+    obj.project = obj.project._id.toString();
+    return obj;
+}
+
 module.exports = connection.model('elementTypes', ElementTypesSchema);
