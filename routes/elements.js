@@ -83,6 +83,46 @@ router.get('/types/:project', util.optionalAuthenticate, function(req, res) {
             res.status(404).json(response);
         }
     });
-})
+});
+
+router.post('/type/:id/delete', passport.authenticate('jwt', { session: false }), function(req, res) {
+    let id = req.params.id;
+    
+    let response = {
+        errors: [],
+        success: false
+    };
+
+    ElementType.findOne({ _id: id }).exec(function(err, type) {
+        if(type) {
+            if(type.canDelete()) {
+                util.findAccessibleProject(req.user, type.project, function(err, project) {
+                    if(project && project.isAdmin(req.user)) {
+                        ElementType.findOneAndRemove({
+                            _id: id
+                        }).exec(function(err, deleted) {
+                            if(deleted) {
+                                response.success = true;
+                                res.json(response);
+                            } else {
+                                response.errors.push('Could not delete this element type due to an error.');
+                                res.status(500).json(response);
+                            }
+                        });
+                    } else {
+                        response.errors.push('You do not have permission to delete element types from this project.');
+                        res.status(403).json(response);
+                    }
+                });
+            } else {
+                response.errors.push('You cannot delete a project\'s "Folder" element type.');
+                res.json(response);
+            }
+        } else {
+            response.errors.push('Element type not found.');
+            res.status(404).json(response);
+        }
+    });
+});
 
 module.exports = router;

@@ -18,6 +18,23 @@ projectsSchema.methods.isOwner = function(user) {
     return this.owner.toString() == user._id.toString();
 }
 
+projectsSchema.methods.isAdmin = function(user) {
+    if(!user) {
+        return false;
+    }
+    
+    if(this.isOwner(user)) {
+        return true;
+    } else {
+        for (let admin of this.admins) {
+            if(admin == user._id.toString() || admin._id.toString() == user._id.toString()) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 projectsSchema.methods.elements = function() {
     return db.model('elements').find({project: this}).populate('author').populate('elementType');
 }

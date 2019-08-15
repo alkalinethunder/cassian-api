@@ -14,4 +14,8 @@ ElementTypesSchema.methods.toJSON = function() {
     return obj;
 }
 
+ElementTypesSchema.methods.canDelete = function() {
+    return this.label != 'Folder';
+}
+
 module.exports = connection.model('elementTypes', ElementTypesSchema);
