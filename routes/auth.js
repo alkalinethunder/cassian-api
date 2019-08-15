@@ -112,4 +112,30 @@ router.get('/userinfo', passport.authenticate('jwt', { session: false }), functi
     });
 });
 
+router.post('/userinfo', passport.authenticate('jwt', { session: false }), function(req, res) {
+    let payload = req.body;
+
+    let response = {
+        success: false,
+        errors: [],
+        user: null
+    };
+
+    req.user.about = payload.about || req.user.about;
+    req.user.fullName = payload.fullName || req.user.fullName;
+    req.user.githubURL = payload.githubURL || req.user.githubURL;
+    req.user.websiteURL = payload.websiteURL || req.user.websiteURL;
+
+    req.user.save(function(err, user) {
+        if(user) {
+            response.success = true;
+            response.user = user.toJSON(false);
+            res.json(response);
+        } else {
+            response.errors.push('An internal error occurred while updating user info.');
+            res.status(500).json(response);
+        }
+    });
+});
+
 module.exports = router;
