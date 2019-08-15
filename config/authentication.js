@@ -12,7 +12,7 @@ var setup = function(p, secret) {
 
     p.use(new PassportJwt.Strategy(opts, (jwt_payload, done) => {
         console.log("Is this the real life?");
-        users.findOne({email: jwt_payload.email}, (err, user) => {
+        users.findOne({_id: jwt_payload._id}, (err, user) => {
             console.log("Is this just fantasy?");
             if(err)
                 return done(err, false);
