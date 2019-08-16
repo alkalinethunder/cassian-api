@@ -70,7 +70,10 @@ router.post('/', passport.authenticate('jwt', { session: false }), function(req,
         // can exist per user.  So we need to check the owner of the project as well when finding existing projects.
         //
         // Also, we need to check the slug instead for less buggy validation.
-        util.findProjectId(user.username, slug, function(err, id) {
+        //
+        // I burst into laughter realizing that this ReferenceError has been in the code for days, un-noticed. - Michael
+        // util.findProjectId(user.username, slug, function(err, id) {
+        util.findProjectId(req.user.username, slug, function(err, id) {
             // If the project exists we need to throw an error back at the user.
             if(id) {
                 response.errors.push('You already own a project with the same name.');
