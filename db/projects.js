@@ -15,7 +15,10 @@ const projectsSchema = new Schema({
 });
 
 projectsSchema.methods.isOwner = function(user) {
-    return this.owner.toString() == user._id.toString();
+    if(!user) {
+        return false;
+    }
+    return this.owner.toString() == user._id.toString() || this.owner._id.toString() == user._id.toString();
 }
 
 projectsSchema.methods.isAdmin = function(user) {

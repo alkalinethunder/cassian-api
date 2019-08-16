@@ -125,4 +125,57 @@ router.post('/type/:id/delete', passport.authenticate('jwt', { session: false })
     });
 });
 
+router.post('/types/:project', passport.authenticate('jwt', { session:  false }), function(req, res) {
+    let projId = req.params.project;
+
+    let payload = req.body;
+
+    let response = {
+        success: false,
+        errors: [],
+        type: null
+    };
+
+    if(!payload.label) {
+        response.errors.push('You must provide a label for the new element type.');
+        res.json(response);
+    } else {
+        payload.icon = payload.icon || 'fa fa-folder';
+
+        util.findAccessibleProject(req.user, projId, function(err, project) {
+            if(project && project.isAdmin(req.user)) {
+                ElementType.findOne({
+                    project: project,
+                    label: payload.label
+                }).exec(function(err, exists) {
+                    if(exists) {
+                        response.errors.push('This project already has an element type with that name.');
+                        res.json(response);
+                    } else {
+                        let type = new ElementType({
+                            project: project,
+                            label: payload.label,
+                            icon: payload.icon
+                        });
+
+                        type.save(function(err, saved) {
+                            if(saved) {
+                                response.success = true;
+                                response.type = saved.toJSON();
+                                res.json(response);
+                            } else {
+                                response.errors.push('An internal error has occurred while saving the element type.');
+                                res.status(500).json(response);
+                            }
+                        });
+                    }
+                })
+            } else {
+                response.errors.push('Project does not exist or you are not an admin of the project.');
+                res.status(404).json(response);
+            }
+        });
+    }
+});
+
 module.exports = router;
