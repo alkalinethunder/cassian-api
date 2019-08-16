@@ -11,6 +11,7 @@ const projectsSchema = new Schema({
     devs: [{type: Schema.Types.ObjectId, ref: 'users'}],
     tags: [{type: String}],
     public: { type: Boolean, default: true, required: true },
+    allowSuggestions: { type: Boolean, default: true, required: true },
     summary: { type: String, default: '' }
 });
 
@@ -31,6 +32,23 @@ projectsSchema.methods.isAdmin = function(user) {
     } else {
         for (let admin of this.admins) {
             if(admin == user._id.toString() || admin._id.toString() == user._id.toString()) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+projectsSchema.methods.isDev = function(user) {
+    if(!user) {
+        return false;
+    }
+
+    if(this.isAdmin(user)) {
+        return true;
+    } else {
+        for(let dev of this.devs) {
+            if(dev.toString() == user._id.toString() || dev._id.toString() == user._id.toString())  {
                 return true;
             }
         }

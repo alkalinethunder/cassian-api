@@ -3,6 +3,7 @@ const passport = require('passport');
 const util = require('./util');
 const Element = require('../db/elements');
 const ElementType = require('../db/elementTypes');
+const slugify = require('slugify');
 
 var router = express.Router();
 
@@ -34,6 +35,100 @@ router.get('/:project', util.optionalAuthenticate, function(req, res) {
             res.status(404).json(response);
         }
     });
+});
+
+router.post('/:project', passport.authenticate('jwt', { session: false }), function(req, res) {
+    let projId = req.params.project;
+    
+    let payload = req.body;
+
+    let response = {
+        errors: [],
+        success: false,
+        element: null
+    };
+    
+    // Make sure the element has a name, some content, and an element type.
+    if(!payload.name) {
+        response.errors.push('You must provide a name for the element.');
+        res.json(response);
+    } else if(!payload.content) {
+        response.errors.push('You must provide Markdown content for the element.');
+        res.json(response);
+    } else if(!payload.type) {
+        response.errors.push('Elements must have an element type.');
+        res.json(response);
+    } else {
+        // Default parent id to null.
+        if(!payload.parent) {
+            payload.parent = null;
+        }
+
+        // Find accessible project by id.
+        util.findAccessibleProject(req.user, projId, function(err, project) {
+            if(project) {
+                // Should the new element be a suggestion or approved element?
+                let isSuggestion = !project.isDev(req.user);
+
+                // Not all projects allow user-suggested elements, so throw an error if we're creating a suggestion and this project
+                // doesn't allow that.
+                if(isSuggestion && !project.allowSuggestions) {
+                    response.errors.push('This project has disabled user-suggested game design elements. You must be a developer to create new design elements.');
+                    return res.status(200).res.json(response);
+                }
+
+                // Create an element slug for better name resolution.
+                let slug = slugify(payload.name);
+
+                // Find existing element with this slug under the parent element of this project.
+                Element.findOne({
+                    slug: slug,
+                    parent: payload.parent,
+                    project: project
+                }).exec(function(err, exists) {
+                    // Don't allow creation of elements with the same name in the same parent.
+                    if(exists) {
+                        response.errors.push('The parent element already has an element with this name.');
+                        res.json(response);
+                    } else {
+                        // Create a new element.
+                        let element = new Element({
+                            slug: slug,
+                            name: payload.name,
+                            content: payload.content,
+                            parent: payload.parent,
+                            elementType: payload.type,
+                            project: project,
+                            author: req.user
+                        });
+
+                        // Suggestions
+                        if(isSuggestion) {
+                            element.approved = false;
+                        } else {
+                            element.approvedBy = element.author;
+                            element.approved = true;
+                        }
+
+                        // Save the element.
+                        element.save(function(err, saved) {
+                            if(saved) {
+                                response.success = true;
+                                response.element = saved.toJSON();
+                                res.json(response);
+                            } else {
+                                response.errors.push('An internal server error has occurred trying to save the element.');
+                                res.status(500).json(response);
+                            }
+                        });
+                    }
+                });
+            } else {
+                response.errors.push('Project not found or you do not have access to this project.');
+                res.status(404).json(response);
+            }
+        });
+    }
 });
 
 router.get('/types/:project', util.optionalAuthenticate, function(req, res) {
