@@ -75,7 +75,7 @@ projectsSchema.methods.elementTypes = function(cb) {
 }
 
 projectsSchema.methods.tasks = function() {
-    return db.model('tasks').find({ project: this });
+    return db.model('tasks').find({ project: this }).populate('author').populate('element');
 }
 
 module.exports = db.model('projects', projectsSchema);

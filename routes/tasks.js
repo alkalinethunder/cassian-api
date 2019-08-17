@@ -113,4 +113,36 @@ router.post('/:project', passport.authenticate('jwt', { session: false }), funct
     }
 });
 
+router.get('/:project/:friendlyId', util.optionalAuthenticate, function(req, res) {
+    let projId = req.params.project;
+    let friendlyId = req.params.friendlyId;
+
+    let response = {
+        errors: [],
+        success: false,
+        task: null,
+    };
+
+    util.findAccessibleProject(req.user, projId, function(err, project) {
+        if(project) {
+            Task.findOne({
+                friendlyId: friendlyId,
+                project: project
+            }).populate('author').populate('element').exec(function(err, task) {
+                if(task) {
+                    response.success = true;
+                    response.task = task.toJSON();
+                    res.json(response);
+                } else {
+                    response.errors.push('A task with that ID was not found.');
+                    res.status(404).json(response);
+                }
+            });
+        } else {
+            response.errors.push('Project not found or you do not have access to this project.');
+            res.status(403).json(response);
+        }
+    });
+})
+
 module.exports = router;
