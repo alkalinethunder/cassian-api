@@ -23,6 +23,7 @@ app.use('/projects', require('./routes/projects'));
 app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));
 app.use('/elements', require('./routes/elements'));
+app.use('/tasks', require('./routes/tasks'));
 
 // What port will we run on?
 const port = process.env.PORT || 3000;
