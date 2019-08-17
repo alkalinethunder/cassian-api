@@ -15,8 +15,16 @@ const ElementsSchema = new Schema({
 });
 
 ElementsSchema.methods.children = function(cb) {
-    model.find({parent: this}).exec(cb);
+    model.find({parent: this}).populate('parent').populate('elementType').populate("parent.elementType").populate('author').exec(cb);
 };
+
+ElementsSchema.isAuthor = function(user) {
+    if(!user) {
+        return false;
+    }
+
+    return author.toString() == user._id.toString || author._id.toString() == user._id.toString();
+}
 
 const model = connection.model('elements', ElementsSchema);
 

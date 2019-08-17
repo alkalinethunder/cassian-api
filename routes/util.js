@@ -10,6 +10,55 @@ var User = require('../db/users');
 var Element = require('../db/elements');
 var ElementType = require('../db/elementTypes');
 
+module.exports.getParents = function(element, cb) {
+    if(!element.parent) {
+        return cb(null, []);
+    }
+
+    let parents = [];
+    
+    function fetchParent(el, cb) {
+        Element.findOne({
+            _id: el.parent
+        }).populate('parent').exec(function(err, parent) {
+            if(parent) {
+                parents.push(parent._id);
+                fetchParent(parent, cb);
+            } else {
+                cb(null, parents);
+            }
+        });
+    }
+
+    fetchParent(element, cb);
+}
+
+/** Finds all children of the specified design element that are accessible to the user.
+ * 
+ * @param {Element} element The parent design element.
+ * @param {Project} project The project that owns the element.
+ * @param {User} user The user trying to access the element.
+ * @param {ElementListCallback} cb The callback that'll receive the fetched element list.
+ */
+module.exports.getAccessibleChildren = function(user, project, element, cb) {
+    element.children(function(err, children) {
+        if(children) {
+            let filtered = [];
+            for(let child of children) {
+                if(!child.approved) {
+                    if(!project.isDev(user) && !child.isAuthor(user)) {
+                        continue;
+                    }
+                }
+                filtered.push(child);
+            }
+            cb(null, filtered);
+        } else {
+            cb(err, false);
+        }
+    })
+}
+
 /**
  * Finds the project with the specified ID if the specified user has access to it.  If an invalid user is specified,
  * then only public projects will be fetched.  Otherwise, projects that are either public, or have the user listed as an
@@ -203,3 +252,10 @@ module.exports.optionalAuthenticate = function(req, res, next) {
  * @param {any} err Contains any errors that may have occurred during the fetch.
  * @param {Project[]} result Contains an array of found projects.
  */
+
+ /** Handles a list of design elements or an error.
+  * 
+  * @callback ElementListCallback
+  * @param {any} err Any errors that may have occurred during the fetch.
+  * @param {Element[]} elements An array of elements, or false if there was an error.
+  */

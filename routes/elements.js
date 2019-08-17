@@ -22,6 +22,18 @@ router.get('/:project', util.optionalAuthenticate, function(req, res) {
                 if(elements) {
                     response.success = true;
                     for(let element of elements) {
+                        // We don't need to send the entire element tree, only the root elements.
+                        if(element.parent) {
+                            continue;
+                        }
+
+                        // Prevent non-devs and non-authors from seeing suggestions.
+                        if(!element.approved) {
+                            if(!project.isDev(req.user) && !element.isAuthor(req.user)) {
+                                continue;
+                            }
+                        }
+
                         response.elements.push(element.toJSON());
                     }
                     res.json(response);
@@ -271,6 +283,58 @@ router.post('/types/:project', passport.authenticate('jwt', { session:  false })
             }
         });
     }
+});
+
+router.get('/:project/:id', util.optionalAuthenticate, function(req, res) {
+    let projId = req.params.project;
+    let elemId = req.params.id;
+
+    let response = {
+        errors: [],
+        success: false,
+        element: null,  
+        children: [],
+        parents: [],
+    };
+
+    util.findAccessibleProject(req.user, projId, function(err, project) {
+        if(project) {
+            Element.findOne({
+                _id: elemId,
+                project: project
+            }).populate('author').populate('parent').populate("parent.elementType").populate('elementType').populate('parent').exec(function(err, element) {
+                if(element) {
+                    if(!element.approved) {
+                        if(!project.isDev(req.user) && !element.isAuthor(req.user)) {
+                            response.status(403).json('You must be the element author or a project developer to view this element suggestion.');
+                            res.status(403).json(response);
+                        }
+                    } else {
+                        response.element = element.toJSON();
+                        util.getAccessibleChildren(req.user, project, element, function(err, children) {
+                            if(children) {
+                                for(let child of children) {
+                                    response.children.push(child.toJSON());
+                                }
+                            }
+                            
+                            util.getParents(element, function(err, parents) {
+                                response.parents = parents || [];
+                                response.success = true;
+                                res.json(response);
+                            });
+                        });
+                    }
+                } else {
+                    response.errors.push('Element not found in this project.');
+                    res.status(404).json(response);
+                }
+            });
+        } else {
+            response.errors.push('Project not found or you do not have access to this project.');
+            res.status(404).json(response);
+        }
+    });
 });
 
 module.exports = router;
