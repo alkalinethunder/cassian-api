@@ -10,6 +10,27 @@ var User = require('../db/users');
 var Element = require('../db/elements');
 var ElementType = require('../db/elementTypes');
 
+/**
+ * Finds an element in the project with the specified ID, unless the ID is null.
+ * Used by the task system when assigning an element to a task.
+ */
+module.exports.findElement = function(project, elemId, cb) {
+    if(!elemId) {
+        cb(null, false, null);
+    } else {
+        Element.findOne({
+            project: project,
+            _id: elemId,
+        }).exec(function(err, element) {
+            if(element) {
+                cb(null, true, element);
+            } else {
+                cb(err, true, null);
+            }
+        });
+    }
+}
+
 module.exports.getParents = function(element, cb) {
     if(!element.parent) {
         return cb(null, []);

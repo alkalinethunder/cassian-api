@@ -57,6 +57,11 @@ router.post('/', passport.authenticate('jwt', { session: false }), function(req,
     if(!payload.name)
         response.errors.push('The project must have a name.');
 
+    if(payload.name == 'Coffee') {
+        response.errors.push("I'm a teapot.");
+        res.status(418).json(response);
+    }
+
     // If there are any errors at this point, stop what we're doing.
     if(response.errors.length) {
         res.json(response);

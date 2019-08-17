@@ -12,8 +12,18 @@ const projectsSchema = new Schema({
     tags: [{type: String}],
     public: { type: Boolean, default: true, required: true },
     allowSuggestions: { type: Boolean, default: true, required: true },
-    summary: { type: String, default: '' }
+    summary: { type: String, default: '' },
+    nextFriendlyId: { type: Number, default: 0 },
 });
+
+projectsSchema.methods.friendlyId = function() {
+    let id = this.nextFriendlyId;
+    this.nextFriendlyId++;
+    this.save((err, p) => {
+        if(err) { throw err; }
+    });
+    return id;
+}
 
 projectsSchema.methods.isOwner = function(user) {
     if(!user) {
@@ -62,6 +72,10 @@ projectsSchema.methods.elements = function() {
 
 projectsSchema.methods.elementTypes = function(cb) {
     db.model('elementTypes').find({project: this}).exec(cb);
+}
+
+projectsSchema.methods.tasks = function() {
+    return db.model('tasks').find({ project: this });
 }
 
 module.exports = db.model('projects', projectsSchema);
